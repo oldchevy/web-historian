@@ -11,20 +11,29 @@ exports.handleRequest = function (req, res) {
   if (req.method === 'GET') {
     if (req.url === '/') {
       httpHelpers.serveAssets(res, archive.paths.siteAssets + '/index.html');
-    }
-    if (req.url === '/styles.css') {
+    } else if (req.url === '/styles.css') {
       httpHelpers.serveAssets(res, archive.paths.siteAssets + req.url);
+    } else {
+      archive.isUrlArchived(req.url, function(boolean) {
+
+        console.log('Archive Boolean:', boolean);
+
+        if (boolean) {
+          httpHelpers.serveAssets(res, archive.paths.archivedSites + req.url);
+        } else {
+
+          archive.isUrlInList(req.url, function(bool) {
+            console.log('List Boolean', bool);
+            if (bool) {
+              httpHelpers.serveAssets(res, archive.paths.siteAssets + '/loading.html');
+            } else {
+              res.writeHead(404);
+              res.end('404 sari gurl');            
+            }
+          });
+        }
+      });      
     }
-
-    archive.isUrlArchived(req.url, function(boolean) {
-
-      if (boolean) {
-        httpHelpers.serveAssets(res, archive.paths.archivedSites + req.url);
-      } else {
-        res.writeHead(404);
-        res.end();
-      }
-    });
   }
 
   if (req.method === 'POST') {
@@ -34,23 +43,25 @@ exports.handleRequest = function (req, res) {
     }).on('end', function() {
       body = Buffer.concat(body).toString();
       var url = body.split('=')[1];
-      workers.fetchHTML(url);
+      //workers.fetchHTML(url);
 
       archive.isUrlInList(url, function(bool) {
         console.log('Current URL: ', url, '\nCurrent Bool: ', bool);
         if (!bool) {
           //If it's not in the list, add it to the list
           archive.addUrlToList(url, function() {
-            res.writeHead(302);
+            console.log('wasnt in list yet, now redirect');
+            res.writeHead(302, {location: url});
             res.end();
           });
+
         } else {
-          //Don't add it to the list
-          httpHelpers.serveAssets(res, archive.paths.siteAssets + '/loading.html');
+          console.log('Already in list, redirect');
+          res.writeHead(302, {location: url});
+          res.end();
         }
-        //Check to see if it's in the archive
-          //if yes, serve it up
-          //if no, redirect to loading page
+
+
       });
     });
 
