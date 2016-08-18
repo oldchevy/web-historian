@@ -30,8 +30,14 @@ exports.readListOfUrls = function(callback) {
   //Async readFile only executes callback arg when reading has finished
   //Callback passed to readListOfUrls is then invoked on entire array of results
   fs.readFile(this.paths.list, 'utf8', function(err, data) {
+    
+    if (err) {
+      console.log(err);
+    }
+
     var results = data.split('\n');
     callback(results);
+
   });
 
 
@@ -48,7 +54,7 @@ exports.isUrlInList = function(string, callback) {
   // });
 
   //Here, the array arg is the results array from above
-  
+
   this.readListOfUrls(function(array) {
     callback(_.contains(array, string));
   });
@@ -56,11 +62,48 @@ exports.isUrlInList = function(string, callback) {
 
 };
 
-exports.addUrlToList = function() {
+exports.addUrlToList = function(urlString, callback) {
+
+  this.readListOfUrls(function(array) {
+
+    // fs.writeFile overwrites the file. Do this to maintain existing urls
+    array.push(urlString);
+    var resultString = array.join('\n'); 
+
+    fs.writeFile(this.paths.list, resultString, function(err) {
+      if (err) {
+        console.log(err);
+      }
+      callback(); // possible utility: tell worker to check site.txt?
+    });
+
+  }.bind(this)); // We were losing our this binding inside of our callback
+
 };
 
-exports.isUrlArchived = function() {
+exports.isUrlArchived = function(websiteString, callback) {
+
+  var slash = websiteString[0] === '/' ? '' : '/';
+
+  fs.readFile(this.paths.archivedSites + slash + websiteString, function(err, data) {
+
+    if (err && err.code !== 'ENOENT') {
+      console.log(err);
+    }
+
+    if (data) {
+      callback(true);
+    } else {
+      callback(false);
+    }
+
+  });
+
 };
 
 exports.downloadUrls = function() {
+
+
+
+
 };
