@@ -25,10 +25,35 @@ exports.initialize = function(pathsObj) {
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function() {
+exports.readListOfUrls = function(callback) {
+
+  //Async readFile only executes callback arg when reading has finished
+  //Callback passed to readListOfUrls is then invoked on entire array of results
+  fs.readFile(this.paths.list, 'utf8', function(err, data) {
+    var results = data.split('\n');
+    callback(results);
+  });
+
+
 };
 
-exports.isUrlInList = function() {
+exports.isUrlInList = function(string, callback) {
+  
+  //A less abstracted example of what is happening 
+
+  // fs.readFile(this.paths.list, 'utf8', function(err, data) {
+  //   var results = data.split('\n');
+  //   bool = _.contains(results, string);
+  //   callback(bool);
+  // });
+
+  //Here, the array arg is the results array from above
+  
+  this.readListOfUrls(function(array) {
+    callback(_.contains(array, string));
+  });
+
+
 };
 
 exports.addUrlToList = function() {
