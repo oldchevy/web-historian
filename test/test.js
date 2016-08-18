@@ -66,7 +66,11 @@ describe('server', function() {
           .expect(302, function (err) {
             if (!err) {
               var fileContents = fs.readFileSync(archive.paths.list, 'utf8');
-              expect(fileContents).to.equal(url + '\n');
+              //Changed this from expecting a new line char at the end of the .txt data
+              //Our helper methods use join and split.. if the end of the file was a newline
+              //char, we would have one more entry in the array than we want:
+              //the last entry would be empty!
+              expect(fileContents).to.equal(url);
             }
 
             done(err);

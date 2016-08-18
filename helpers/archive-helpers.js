@@ -32,11 +32,11 @@ exports.readListOfUrls = function(callback) {
   fs.readFile(this.paths.list, 'utf8', function(err, data) {
     
     if (err) {
-      console.log(err);
+      console.log('Error on readListOfUrls: ', err);
     }
 
     var results = data.split('\n');
-    callback(results);
+    callback(results.filter(function(entry) { return entry !== ''; }));
 
   });
 
@@ -68,7 +68,9 @@ exports.addUrlToList = function(urlString, callback) {
 
     // fs.writeFile overwrites the file. Do this to maintain existing urls
     array.push(urlString);
-    var resultString = array.join('\n'); 
+    var resultString = array.filter(function(entry) {
+      return entry !== '';
+    }).join('\n'); 
 
     fs.writeFile(this.paths.list, resultString, function(err) {
       if (err) {
@@ -88,7 +90,7 @@ exports.isUrlArchived = function(websiteString, callback) {
   fs.readFile(this.paths.archivedSites + slash + websiteString, function(err, data) {
 
     if (err && err.code !== 'ENOENT') {
-      console.log(err);
+      console.log('Error on isURLArchived: ', err, websiteString);
     }
 
     if (data) {
